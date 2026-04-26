@@ -13,20 +13,20 @@ Currently the `main.c` implementation is terminal based.
 
 ## Compilation
 
-A C compiler is required.
+A C compiler is required and GNU `make` is recommended.
 
-`gcc -o crosses main.c noughts_and_crosses.c`
+`gcc -o terminal.c -lnac -o terminal`
 
 ## Playing
 
-You may need to set the binary as executable via `chmod +x ./crosses`
+You may need to set the binary as executable via `chmod +x ./terminal`
 
 Crosses ('X') always go first.
 
-`./crosses`
+`./terminal`
 
 ```
-$ ./crosses 
+$ ./terminal
 ___
 ___
 ___
@@ -82,3 +82,4 @@ Play again? "y/n" >
 
 
 At the end of the game the player is prompted to restart the game or terminate the program.
+

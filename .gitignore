@@ -1,1 +1,6 @@
-crosses
+*.so
+*.o
+*.a
+
+
+terminal

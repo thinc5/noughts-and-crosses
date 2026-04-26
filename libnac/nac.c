@@ -1,4 +1,6 @@
-#include "noughts_and_crosses.h"
+#include "nac.h"
+
+#include <stdio.h>
 
 // If we were ever to have a winning sequence not equal the
 // dimensions of the square, this could change (UNLIKELY).
@@ -85,7 +87,7 @@ NAC_GAME_RESULT NAC_game_status(const NAC_BOARD *board) {
         // Encountered a zero? (we check horizontally)
         if (full) {
             for (size_t j = i * NAC_DIMENSIONS; j < NAC_DIMENSIONS; j++) {
-                if (*board[j] == NAC_NONE) {
+                if ((*board)[j] == NAC_NONE) {
                     full = false;
                     break;
                 }

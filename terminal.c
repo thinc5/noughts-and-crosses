@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "noughts_and_crosses.h"
+#include <nac.h>
 
 static const char NAC_SYMBOLS[NAC_NUM_STATES] = { '_', 'X', 'O' };
 
