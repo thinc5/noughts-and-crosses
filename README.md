@@ -8,25 +8,28 @@ The goal is to eventually create a SDK/Library that allows for easy implementati
 
 The project exists as an experiment in writing these interfaces.
 
-Currently the `main.c` implementation is terminal based.
+Currently the `cli.c` implementation is terminal based.
 
 
 ## Compilation
 
 A C compiler is required and GNU `make` is recommended.
 
-`gcc -o terminal.c -lnac -o terminal`
+```
+$ make
+gcc -std=c11 -Wall -pedantic cli.c cli/display.c cli/input.c -I./libnac -I./cli -L./libnac -static -lnac -o nc-cli
+```
 
 ## Playing
 
-You may need to set the binary as executable via `chmod +x ./terminal`
+You may need to set the binary as executable via `chmod +x ./nc-cli`
 
 Crosses ('X') always go first.
 
-`./terminal`
+`./nc-cli`
 
 ```
-$ ./terminal
+$ ./nc-cli
 ___
 ___
 ___

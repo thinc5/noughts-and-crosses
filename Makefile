@@ -5,12 +5,12 @@ IFLAGS			:= -I./libnac
 
 DEL				:= rm -f
 
-all: terminal
+all: nc-cli
 
 clean:
-	$(DEL) terminal
+	$(DEL) nc-cli
 
-terminal: terminal.c
-	$(CC) $(CFLAGS) $^ $(IFLAGS) $(LFLAGS) -o $@
+nc-cli: cli.c cli/display.c cli/input.c
+	$(CC) $(CFLAGS) $^ $(IFLAGS) -I./cli $(LFLAGS) -o $@
 
 .PHONY: clean
