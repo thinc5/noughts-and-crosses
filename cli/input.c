@@ -14,7 +14,7 @@ int poll_input(int fd, char *buffer, int max_size) {
     {
         switch (last_read) {
             case '\b':
-                if (position > 1) {
+                if (position > 0) {
                     buffer[position] = '\0';
                     position--;
                 }
@@ -35,7 +35,7 @@ int poll_input(int fd, char *buffer, int max_size) {
     return false;
 }
 
-bool parse_move(char *buffer, size_t *target) {
+bool parse_move(char *buffer, size_t *target, NAC_DIMENSIONS dimensions) {
     char *x_str = strtok(buffer, ",");
     char *y_str = strtok(NULL, ",");
     if (x_str == NULL || y_str == NULL){
@@ -44,11 +44,11 @@ bool parse_move(char *buffer, size_t *target) {
 
     int x = atoi(x_str);
     int y = atoi(y_str);
-    if (x < 1 || x > 3 || y < 1 || y > 3) {
+    if (x < 1 || x > dimensions + 1 || y < 1 || y > dimensions + 1) {
         return false;
     }
 
-    *target = (size_t) (x - 1) + ((y - 1) * NAC_DIMENSIONS);
+    *target = (size_t) (x - 1) + ((y - 1) * dimensions);
 
     return true;
 }

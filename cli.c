@@ -15,19 +15,27 @@
 #define INPUT_BUFFER_SIZE 100
 
 void play_game(int fd, bool host)
-{
+{	
+	#define DIMENSIONS 4 
+
+	static NAC_GLYPH board[DIMENSIONS * DIMENSIONS];
 	static char buffer[INPUT_BUFFER_SIZE] = { '\0' };
 	static char buffer_for_processing[INPUT_BUFFER_SIZE] = { '\0' };
 	static int buffer_size = 0;
 	bool cross_turn = true;
-	NAC_BOARD board = { NAC_NONE };
+	NAC_STATE state = {
+		.dimensions = DIMENSIONS,
+		.length = DIMENSIONS * DIMENSIONS,
+		.board = board
+	};
+
 	NAC_GAME_RESULT game_result = NAC_NOT_OVER;
 	NAC_MOVE_RESULT move_result = NAC_MOVE_INVALID;
 	size_t target_index = 0;
 
 	printf("%s\n", host ? "Hosting game" : "Joining game");
 	do {
-		display_game((const NAC_BOARD *)&board);
+		display_game((const NAC_STATE *)&state);
 
 		do {
 			// If we are local, input is always local.
@@ -55,13 +63,13 @@ void play_game(int fd, bool host)
 
 			memcpy(buffer_for_processing, buffer,
 			       INPUT_BUFFER_SIZE);
-			if (!parse_move(buffer_for_processing, &target_index)) {
+			if (!parse_move(buffer_for_processing, &target_index, state.dimensions)) {
 				printf("Bad input, try again\n");
 				continue;
 			}
 		} while ((move_result =
-				  NAC_make_move(&board, target_index,
-						cross_turn)) ==
+				  NAC_make_move(&state, target_index,
+						cross_turn ? NAC_CROSS : NAC_NOUGHT)) ==
 			 NAC_MOVE_INVALID);
 
 		// Whenever we deem a move successful we can send it to the peer if they exist.
@@ -70,10 +78,10 @@ void play_game(int fd, bool host)
 		}
 
 		cross_turn = !cross_turn;
-	} while ((game_result = NAC_game_status((const NAC_BOARD *)&board)) ==
+	} while ((game_result = NAC_game_status((const NAC_STATE *)&state)) ==
 		 NAC_NOT_OVER);
 
-	display_game((const NAC_BOARD *)&board);
+	display_game((const NAC_STATE *)&state);
 	display_game_result(game_result);
 }
 
