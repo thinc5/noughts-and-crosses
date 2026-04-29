@@ -1,0 +1,148 @@
+#define _POSIX_C_SOURCE 200112L
+
+#include "nwrk.h"
+#include "log.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <netdb.h>
+
+#include <sys/fcntl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
+#include <sys/select.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
+static const char *hostname = "0.0.0.0";
+
+int host_server(const char *port)
+{
+	// Validate port.
+	int port_num = port == NULL ? 0 : atoi(port);
+	if (port_num == 0 && port != NULL) {
+		ERROR_LOG("Invalid port provided: %s\n", port);
+		return 0;
+	}
+
+	// Create socket to listen on, use IP and TCP.
+	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	int yes_reuse = 1;
+	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes_reuse,
+		   sizeof(int));
+	if (socket_fd == -1) {
+		ERROR_LOG("Socket creation failed...\n");
+		return 0;
+	}
+	DEBUG_LOG("Socket created\n");
+
+	// Set up the TCP server
+	struct sockaddr_in server_addr;
+	memset(&server_addr, 0, sizeof(server_addr));
+	// IP protocol, set address and port
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = inet_addr(hostname);
+	server_addr.sin_port = htons(port == NULL ? 0 : port_num);
+
+	// Bind socket with server details, expect 0 on success
+	if ((bind(socket_fd, (const struct sockaddr *)&server_addr,
+		  sizeof(server_addr))) != 0) {
+		ERROR_LOG("Socket bind failed...\n");
+		return 0;
+	}
+
+	DEBUG_LOG("Socket bound\n");
+
+	// Listen on socket
+	if ((listen(socket_fd, 20)) != 0) {
+		ERROR_LOG("Listen failed\n");
+		return 0;
+	}
+
+	char readable_hostname[INET6_ADDRSTRLEN];
+	getnameinfo((struct sockaddr *)&server_addr, sizeof(server_addr),
+		    readable_hostname, sizeof(readable_hostname), 0, 0,
+		    NI_NUMERICHOST);
+	DEBUG_LOG("Server listening... (fd: %d) on: %s:%d\n", socket_fd,
+		  readable_hostname, port_num);
+	// Accept client connection
+	struct sockaddr_in client_addr;
+	unsigned int len = sizeof(client_addr);
+	int connection_fd = accept(socket_fd, (struct sockaddr *)&client_addr,
+				   &len);
+	if (connection_fd < 0) {
+		ERROR_LOG("Server accept failed...\n");
+		return 0;
+	}
+	fcntl(connection_fd, F_SETFL, O_NONBLOCK);
+	DEBUG_LOG("Server accepted the client\n");
+	close(socket_fd);
+	return connection_fd;
+}
+
+int connect_to_sever(const char *address, const char *port)
+{
+	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (socket_fd == -1) {
+		ERROR_LOG("Socket creation failed...\n");
+		return 0;
+	}
+	DEBUG_LOG("Socket created..\n");
+
+	// Populate sockaddr_in struct with server details
+	int port_num = atoi(port);
+	if (port_num == 0) {
+		return 0;
+	}
+	struct sockaddr_in server_addr;
+	memset(&server_addr, 0, sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = inet_addr(address);
+	server_addr.sin_port = htons(port_num);
+
+	DEBUG_LOG("Connecting to server.....\n");
+	if (connect(socket_fd, (struct sockaddr *)&server_addr,
+		    sizeof(server_addr)) != 0) {
+		ERROR_LOG("Connection with the server failed...\n");
+		return 0;
+	}
+	DEBUG_LOG("Connected to the server..\n");
+	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
+	return socket_fd;
+}
+
+int read_network_line(int fd, char *input_buffer, int max_size)
+{
+	fd_set read_fds;
+	FD_ZERO(&read_fds);
+	FD_SET(fd, &read_fds);
+	int ret = select(fd + 1, &read_fds, NULL, NULL, NULL);
+	if (ret < 1) {
+		return -1;
+	}
+	int bytes_read = 0;
+	while (bytes_read < max_size) {
+		int read_chunk =
+			read(fd, input_buffer + bytes_read,
+			     max_size - bytes_read);
+		if (read_chunk <= 0) {
+			break;
+		}
+		bytes_read += read_chunk;
+		if (input_buffer[bytes_read] == '\n') {
+			break;
+		}
+	}
+	return bytes_read;
+}
+
+int write_network_line(int fd, char *input_buffer, int size)
+{
+	int bytes_written = send(fd, input_buffer, size, MSG_DONTWAIT);
+	DEBUG_LOG("%d (%d) bytes written (%s)\n", bytes_written, size,
+		  input_buffer);
+	return bytes_written;
+}

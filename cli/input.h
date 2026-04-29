@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool poll_input(char **buffer);
+int poll_input(int fd, char *buffer, int max_size);
 bool parse_move(char *buffer, size_t *target);
 char parse_yn(char *buffer);
 

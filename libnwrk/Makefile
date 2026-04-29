@@ -9,18 +9,19 @@ ifeq ($(DEBUG), 1)
     CFLAGS += -g -DDEBUG
 endif
 
-all: libnac.so libnac.a
+
+all: libnwrk.so libnwrk.a
 
 clean:
 	$(DEL) *.so *.o *.a
 
-libnac.so: nac.c
+libnwrk.so: nwrk.c
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
-libnac.o: nac.c
+libnwrk.o: nwrk.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
-libnac.a: nac.o
+libnwrk.a: nwrk.o
 	$(AR) rcs $@ $^
 
 .PHONY: clean

@@ -1,7 +1,5 @@
 #include "nac.h"
 
-#include <stdio.h>
-
 // If we were ever to have a winning sequence not equal the
 // dimensions of the square, this could change (UNLIKELY).
 #define WINNING_SEQUENCE NAC_DIMENSIONS

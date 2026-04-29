@@ -5,13 +5,9 @@
 #include <string.h>
 #include <nac.h>
 
-bool poll_input(char **buffer) {
-    #define INPUT_BUFFER_SIZE 30
-    static char INPUT_BUFFER[INPUT_BUFFER_SIZE] = { '\0' };
-    memset(INPUT_BUFFER, '\0', INPUT_BUFFER_SIZE);
+int poll_input(int fd, char *buffer, int max_size) {
+    memset(buffer, '\0', max_size);
     
-    *buffer = INPUT_BUFFER;
-
     size_t position = 0;
     char last_read = '\0';
     while ((last_read = getchar()) != EOF)
@@ -19,18 +15,18 @@ bool poll_input(char **buffer) {
         switch (last_read) {
             case '\b':
                 if (position > 1) {
-                    INPUT_BUFFER[position] = '\0';
+                    buffer[position] = '\0';
                     position--;
                 }
                 break;
             case '\n':
                 if (position > 0) {
-                    return true;
+                    return position;
                 }
                 break;
             default:
-                if (position + 1 < INPUT_BUFFER_SIZE) {
-                    INPUT_BUFFER[position] = last_read;
+                if (position + 1 < max_size) {
+                    buffer[position] = last_read;
                     position++;
                 }
                 break;
